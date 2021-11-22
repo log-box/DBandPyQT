@@ -12,7 +12,7 @@ Unreachable
 10.0.0.4
 """
 from tabulate import tabulate
-from task_2 import host_range_ping
+from task2 import host_range_ping
 
 
 def host_range_ping_tab():

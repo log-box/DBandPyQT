@@ -5,7 +5,7 @@
 
 
 from ipaddress import ip_address
-from task_1 import host_ping
+from task1 import host_ping
 
 
 def host_range_ping():
