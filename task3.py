@@ -16,10 +16,8 @@ from task2 import host_range_ping
 
 
 def host_range_ping_tab():
-    # запрашиваем хосты, проверяем доступность, получаем словарь результатов
     res_dict = host_range_ping()
-    print()
-    # выводим в табличном виде
+    print('*'*100)
     print(tabulate([res_dict], headers='keys', tablefmt="pipe", stralign="center"))
 
 
