@@ -26,6 +26,11 @@ ENCODING = 'encoding'
 MESSAGE = 'message'
 ROOM = 'room'
 ALERT = 'alert'
+EXIT = 'exit'
+SENDER = 'sender'
+DESTINATION = 'destination'
+MESSAGE_TEXT = 'mess_text'
+
 ##############################
 
 # Прочие ключи, используемые в протоколе
@@ -43,3 +48,9 @@ AUTHENTICATE = 'authenticate'
 JOIN = 'join'
 LEAVE = 'leave'
 ##############
+
+RESPONSE_200 = {RESPONSE: 200}
+RESPONSE_400 = {
+            RESPONSE: 400,
+            ERROR: None
+        }

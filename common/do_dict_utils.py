@@ -21,6 +21,14 @@ def do_authenticate(account_name, password):
     return out
 
 
+def do_exit_message(account_name):
+    return {
+        ACTION: EXIT,
+        TIME: time.time(),
+        ACCOUNT_NAME: account_name
+    }
+
+
 # @Log()
 def do_quit(account_name):
     """
@@ -49,14 +57,12 @@ def do_presence(account_name='Guest', status='I`m online'):
     out = {
         ACTION: PRESENCE,
         TIME: time.time(),
-        PORT: DEFAULT_PORT,
-        TYPE: STATUS,
         USER: {
             ACCOUNT_NAME: account_name,
-            STATUS: status,
         }
     }
     return out
+
 
 
 def do_wait_message():
