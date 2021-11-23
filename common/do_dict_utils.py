@@ -47,13 +47,7 @@ def do_quit(account_name):
 
 
 # @Log()
-def do_presence(account_name='Guest', status='I`m online'):
-    """
-    Функция генерирует запрос о присутствии клиента (подключение)
-    :param status:
-    :param account_name:
-    :return:
-    """
+def do_presence(account_name):
     out = {
         ACTION: PRESENCE,
         TIME: time.time(),
@@ -62,7 +56,6 @@ def do_presence(account_name='Guest', status='I`m online'):
         }
     }
     return out
-
 
 
 def do_wait_message():
