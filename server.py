@@ -1,45 +1,46 @@
-from distutils.log import Log
-from socket import socket, AF_INET, SOCK_STREAM
-import sys
 import argparse
 import select
-from common.variables import *
+import threading
+from socket import AF_INET, SOCK_STREAM
+
+from DBandPyQT.DataBaseServer import DataBaseServer
+from DBandPyQT.port import Port
 from common.utils import *
+from common.variables import *
 from log.server_log_config import *
 from log.server_log_config import SERVER_LOG
 from metaclass import ServerMaker
 
 
-class Port:
-    def __set__(self, instance, value):
-        if not 1023 < value < 65536:
-            SERVER_LOG.critical(
-                f'Попытка запуска сервера с указанием неподходящего порта {value}. Допустимы адреса с 1024 до 65535.')
-            exit(1)
-        instance.__dict__[self.name] = value
+# Парсер аргументов коммандной строки.
+def arg_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-p', default=DEFAULT_PORT, type=int, nargs='?')
+    parser.add_argument('-a', default='', nargs='?')
+    namespace = parser.parse_args(sys.argv[1:])
+    listen_address = namespace.a
+    listen_port = namespace.p
+    # проверка получения корретного номера порта для работы сервера.
+    if not 1023 < listen_port < 65536:
+        SERVER_LOG.critical(
+            f'Попытка запуска сервера с указанием неподходящего порта {listen_port}. Допустимы адреса с 1024 до 65535.')
+        exit(1)
 
-    def __set_name__(self, owner, name):
-        self.name = name
+    return listen_address, listen_port
 
 
-class ChatServer(metaclass=ServerMaker):
+class ChatServer(threading.Thread, metaclass=ServerMaker):
     listen_port = Port()
 
-    def __init__(self, listen_address, listen_port):
+    def __init__(self, listen_address, listen_port, db):
         self.listen_address = listen_address
         self.listen_port = listen_port
         self.clients = []
         self.messages_list = []
-        # Словарь, содержащий имена пользователей и соответствующие им сокеты.
+        self.db = db
         self.names = dict()
-        # Слушаем порт
+        super().__init__()
 
-    # def __set__(self, obj, value):
-    #     if not 1023 < self.listen_port < 65536:
-    #         raise AttributeError("Wrong port")
-    #     obj.__dict__[self.listen_port] = value
-
-    @Log()
     def socket_init(self):
         transport = socket(AF_INET, SOCK_STREAM)
         transport.bind((self.listen_address, self.listen_port))
@@ -58,6 +59,8 @@ class ChatServer(metaclass=ServerMaker):
             # Если такой пользователь ещё не зарегистрирован, регистрируем, иначе отправляем ответ и завершаем соединение.
             if message[USER][ACCOUNT_NAME] not in self.names.keys():
                 self.names[message[USER][ACCOUNT_NAME]] = client
+                ip, client_port = client.getpeername()
+                self.db.login(message[USER][ACCOUNT_NAME], ip)
                 send_message(client, RESPONSE_200)
             else:
                 response = RESPONSE_400
@@ -73,6 +76,7 @@ class ChatServer(metaclass=ServerMaker):
             return
         # Если клиент выходит
         elif ACTION in message and message[ACTION] == EXIT and ACCOUNT_NAME in message:
+            self.db.logout(message[ACCOUNT_NAME])
             self.clients.remove(self.names[ACCOUNT_NAME])
             self.names[ACCOUNT_NAME].close()
             del self.names[ACCOUNT_NAME]
@@ -95,8 +99,7 @@ class ChatServer(metaclass=ServerMaker):
             SERVER_LOG.error(
                 f'Пользователь {message[DESTINATION]} не зарегистрирован на сервере, отправка сообщения невозможна.')
 
-    @Log()
-    def main(self):
+    def run(self):
         self.socket_init()
         while True:
             # Ждём подключения, если таймаут вышел, ловим исключение.
@@ -135,29 +138,32 @@ class ChatServer(metaclass=ServerMaker):
             self.messages_list.clear()
 
 
-# Парсер аргументов коммандной строки.
-def arg_parser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-p', default=DEFAULT_PORT, type=int, nargs='?')
-    parser.add_argument('-a', default='', nargs='?')
-    namespace = parser.parse_args(sys.argv[1:])
-    listen_address = namespace.a
-    listen_port = namespace.p
-    # проверка получения корретного номера порта для работы сервера.
-    if not 1023 < listen_port < 65536:
-        SERVER_LOG.critical(
-            f'Попытка запуска сервера с указанием неподходящего порта {listen_port}. Допустимы адреса с 1024 до 65535.')
-        exit(1)
-
-    return listen_address, listen_port
-
+def print_help():
+    print('Поддерживаемые комманды:')
+    print('exit - завершение работы сервера.')
+    print('help - вывод справки по поддерживаемым командам')
 
 def starter():
     address, port = arg_parser()
-    port = 1024
-    chat = ChatServer(address, port)
-    chat.main()
+    port = DEFAULT_PORT
+    database = DataBaseServer()
+    chat = ChatServer(address, port, database)
+    chat.daemon = True
+    chat.start()
 
+    while True:
+        command = input('Введите комманду: ')
+        if command == 'help':
+            print_help()
+        elif command == 'exit':
+            break
 
 if __name__ == '__main__':
     starter()
+    # connection = sqlite3.connect('server.db.sqlite')
+    # cursor = connection.cursor()
+    # cursor.execute("CREATE TABLE IF NOT EXISTS Clients (user_id int NOT NULL,account_name char(50), information char(150), PRIMARY KEY (user_id) )")
+    # cursor.execute("CREATE TABLE IF NOT EXISTS ClientHistory (user_id int, login_time date, ip_address char(30), FOREIGN KEY (user_id) REFERENCES Clients(user_id))")
+    # cursor.execute("CREATE TABLE IF NOT EXISTS Contacts (owner_id int, client_id int)")
+    # connection.commit()
+    # connection.close()

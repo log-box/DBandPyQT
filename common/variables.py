@@ -54,3 +54,6 @@ RESPONSE_400 = {
             RESPONSE: 400,
             ERROR: None
         }
+
+
+SERVER_DATABASE = 'sqlite:///server.sqlite.db'
