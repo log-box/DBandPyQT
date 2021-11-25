@@ -3,8 +3,8 @@ import select
 import threading
 from socket import AF_INET, SOCK_STREAM
 
-from DBandPyQT.DataBaseServer import DataBaseServer
-from DBandPyQT.port import Port
+from DataBaseServer import DataBaseServer
+from descriptors import Port
 from common.utils import *
 from common.variables import *
 from log.server_log_config import *

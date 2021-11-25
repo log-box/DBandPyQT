@@ -3,7 +3,7 @@ import datetime
 from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import mapper, sessionmaker
 
-from DBandPyQT.common.variables import SERVER_DATABASE
+from common.variables import SERVER_DATABASE
 
 
 class DataBaseServer:
