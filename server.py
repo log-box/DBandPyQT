@@ -142,6 +142,9 @@ def print_help():
     print('Поддерживаемые комманды:')
     print('exit - завершение работы сервера.')
     print('help - вывод справки по поддерживаемым командам')
+    print('users - список известных пользователей')
+    print('online - список подключенных пользователей')
+    print('history - история входов пользователя')
 
 def starter():
     address, port = arg_parser()
@@ -157,6 +160,18 @@ def starter():
             print_help()
         elif command == 'exit':
             break
+        elif command == 'users':
+            for user in sorted(database.users()):
+                print(f'Пользователь {user[0]}, последний вход: {user[1]}')
+        elif command == 'online':
+            for user in sorted(database.online()):
+                print(f'Пользователь {user[0]}, подключен: {user[1]}:{user[2]}, время установки соединения: {user[3]}')
+        elif command == 'history':
+            user_name = input('Введите имя пользователя для просмотра истории. Для вывода всей истории, просто нажмите Enter: ')
+            for user in sorted(database.history(user_name)):
+                print(f'Пользователь: {user[0]} время входа: {user[1]}. Вход с: {user[2]}:{user[3]}')
+        else:
+            print('Команда не распознана.')
 
 if __name__ == '__main__':
     starter()

@@ -87,7 +87,7 @@ class DataBaseServer:
             query = query.filter(self.ChatUsers.user_name == user_name)
         return query.all()
 
-    def chat_contacts(self):
+    def online(self):
         query = self.cursor.query(
             self.ChatUsers.user_name,
             self.ChatContacts.ip_address,
@@ -95,7 +95,7 @@ class DataBaseServer:
         ).join(self.ChatUsers)
         return query.all()
 
-    def all_users(self):
+    def users(self):
         query = self.cursor.query(
             self.ChatUsers.user_name
         )
