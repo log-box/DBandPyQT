@@ -4,9 +4,9 @@ import threading
 from socket import AF_INET, SOCK_STREAM
 
 from DataBaseServer import DataBaseServer
-from descriptors import Port
 from common.utils import *
 from common.variables import *
+from descriptors import Port
 from log.server_log_config import *
 from log.server_log_config import SERVER_LOG
 from metaclass import ServerMaker
@@ -146,6 +146,7 @@ def print_help():
     print('online - список подключенных пользователей')
     print('history - история входов пользователя')
 
+
 def starter():
     address, port = arg_parser()
     port = DEFAULT_PORT
@@ -161,17 +162,37 @@ def starter():
         elif command == 'exit':
             break
         elif command == 'users':
+            print('Список всех зарегестрированных пользователей:')
+            i = 1
             for user in sorted(database.users()):
-                print(f'Пользователь {user[0]}, последний вход: {user[1]}')
+                print(f'{i}) {user[0]}: DB_INDEX: {user[1]}')
+                i += 1
         elif command == 'online':
-            for user in sorted(database.online()):
-                print(f'Пользователь {user[0]}, подключен: {user[1]}:{user[2]}, время установки соединения: {user[3]}')
+            user = database.online()
+            if len(user) >0:
+                for user in sorted(database.online()):
+                    print(f'Пользователь {user[0]}, подключен: {user[1]}:{user[2]}, время установки соединения: {user[3]}')
+            else:
+                print('Сейчас в чате никого нет')
         elif command == 'history':
-            user_name = input('Введите имя пользователя для просмотра истории. Для вывода всей истории, просто нажмите Enter: ')
-            for user in sorted(database.history(user_name)):
-                print(f'Пользователь: {user[0]} время входа: {user[1]}. Вход с: {user[2]}:{user[3]}')
+            user_name = input(
+                'Введите имя пользователя для просмотра истории. Для вывода всей истории, просто нажмите Enter: ')
+            if user_name != '':
+                user = database.history(user_name)
+                if user:
+                    print(f'История пользователя {user[0][0]}')
+                    i = 1
+                    for user in sorted(database.history(user_name)):
+                        print(f'{i}) время входа: {user[1]}. Вход с: {user[2]}')
+                        i += 1
+                else:
+                    print(f'Пользователя {user_name} не существует')
+            else:
+                for user in sorted(database.history(user_name)):
+                    print(f'Пользователь: {user[0]} время входа: {user[1]}. Вход с: {user[2]}')
         else:
             print('Команда не распознана.')
+
 
 if __name__ == '__main__':
     starter()
