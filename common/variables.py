@@ -47,6 +47,11 @@ QUIT = 'quit'
 AUTHENTICATE = 'authenticate'
 JOIN = 'join'
 LEAVE = 'leave'
+USERS_REQUEST = 'get_users'
+LIST_INFO = 'data_list'
+GET_CONTACTS = 'get_contacts'
+REMOVE_CONTACT = 'remove'
+ADD_CONTACT = 'add'
 ##############
 
 RESPONSE_200 = {RESPONSE: 200}
@@ -54,6 +59,8 @@ RESPONSE_400 = {
             RESPONSE: 400,
             ERROR: None
         }
-
+RESPONSE_202 = {RESPONSE: 202,
+                LIST_INFO:None
+                }
 
 SERVER_DATABASE = 'sqlite:///server.sqlite.db'
