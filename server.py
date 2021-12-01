@@ -1,9 +1,14 @@
 import argparse
+import configparser
 import select
 import threading
 from socket import AF_INET, SOCK_STREAM
 
+from PyQt5.QtCore import QTimer
+from PyQt5.QtWidgets import QApplication, QMessageBox
+
 from DataBaseServer import DataBaseServer
+from GuiServer import MainWindow, gui_create_model, HistoryWindow, create_stat_model, ConfigWindow
 from common.utils import *
 from common.variables import *
 from descriptors import Port
@@ -18,10 +23,10 @@ conflag_lock = threading.Lock()
 
 
 # Парсер аргументов коммандной строки.
-def arg_parser():
+def arg_parser(efault_port, default_address):
     parser = argparse.ArgumentParser()
-    parser.add_argument('-p', default=DEFAULT_PORT, type=int, nargs='?')
-    parser.add_argument('-a', default='', nargs='?')
+    parser.add_argument('-p', default=efault_port, type=int, nargs='?')
+    parser.add_argument('-a', default=default_address, nargs='?')
     namespace = parser.parse_args(sys.argv[1:])
     listen_address = namespace.a
     listen_port = namespace.p
@@ -184,6 +189,7 @@ def print_help():
     print('online - список подключенных пользователей')
     print('history - история входов пользователя')
 
+
 # Старая логика работы
 def starter():
     address, port = arg_parser()
@@ -232,6 +238,7 @@ def starter():
         else:
             print('Команда не распознана.')
 
+
 def main():
     # Загрузка файла конфигурации сервера
     config = configparser.ConfigParser()
@@ -241,17 +248,13 @@ def main():
 
     # Загрузка параметров командной строки, если нет параметров, то задаём
     # значения по умоланию.
-    listen_address, listen_port = arg_parser(
-        config['SETTINGS']['Default_port'], config['SETTINGS']['Listen_Address'])
+    listen_address, listen_port = arg_parser(config['SETTINGS']['Default_port'], config['SETTINGS']['Listen_Address'])
 
     # Инициализация базы данных
-    database = ServerStorage(
-        os.path.join(
-            config['SETTINGS']['Database_path'],
-            config['SETTINGS']['Database_file']))
+    database = DataBaseServer(os.path.join(config['SETTINGS']['Database_path'], config['SETTINGS']['Database_file']))
 
     # Создание экземпляра класса - сервера и его запуск:
-    server = Server(listen_address, listen_port, database)
+    server = ChatServer(listen_address, listen_port, database)
     server.daemon = True
     server.start()
 
@@ -335,8 +338,10 @@ def main():
     # Запускаем GUI
     server_app.exec_()
 
+
 if __name__ == '__main__':
-    starter()
+    main()
+    # starter()
     # connection = sqlite3.connect('server.db.sqlite')
     # cursor = connection.cursor()
     # cursor.execute("CREATE TABLE IF NOT EXISTS Clients (user_id int NOT NULL,account_name char(50), information char(150), PRIMARY KEY (user_id) )")

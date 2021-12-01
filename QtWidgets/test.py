@@ -9,7 +9,7 @@ class MyWindow(QWidget):
         super().__init__()
         uic.loadUi('test.ui', self)
         a = print('123')
-        self.OkButton.clicked.connect(a)
+        self.OkButton.clicked.connect(qApp.exit)
 
 
 if __name__ == '__main__':

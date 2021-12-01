@@ -1,4 +1,4 @@
-from DBandPyQT.log.server_log_config import SERVER_LOG
+from log.server_log_config import SERVER_LOG
 
 
 class Port:

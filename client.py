@@ -6,7 +6,7 @@ import threading
 import time
 from socket import *
 
-from DBandPyQT.DataBaseUsers import DataBaseClients
+from DataBaseUsers import DataBaseClients
 from common.do_dict_utils import do_presence, do_exit_message
 from common.utils import get_message, send_message
 from common.variables import *

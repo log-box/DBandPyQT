@@ -45,8 +45,9 @@ class DataBaseServer:
             self.sent = 0
             self.accepted = 0
 
-    def __init__(self):
-        self.database_core = create_engine(SERVER_DATABASE, echo=False, pool_recycle=7200)
+    def __init__(self, path):
+        self.database_core = create_engine(f'sqlite:///{path}', echo=False, pool_recycle=7200,
+                                             connect_args={'check_same_thread': False})
         self.meta = MetaData()
 
         chat_users_table = Table('ChatUsers', self.meta,
@@ -200,11 +201,11 @@ class DataBaseServer:
 
 
 if __name__ == '__main__':
-    test_db = DataBaseServer()
-    # test_db.login('test1', '192.168.88.2')
-    # test_db.login('test2', '192.168.88.3')
-    # print(test_db.users())
-    # print(test_db.online())
+    test_db = DataBaseServer('')
+    test_db.login('test1', '192.168.88.2')
+    test_db.login('test2', '192.168.88.3')
+    print(test_db.users())
+    print(test_db.online())
     # test_db.add_contact('test2', 'test1')
     # test_db.add_contact('test2', 'test1')
     # test_db.message_count('test2', 'test1')
