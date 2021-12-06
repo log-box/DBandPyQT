@@ -144,6 +144,7 @@ class ChatServer(threading.Thread, metaclass=ServerMaker):
 
     def run(self):
         self.socket_init()
+        global new_connection
         while True:
             # Ждём подключения, если таймаут вышел, ловим исключение.
             try:
@@ -271,14 +272,18 @@ def main():
     # Функция обновляющяя список подключённых, проверяет флаг подключения, и
     # если надо обновляет список
     def list_update():
-        global new_connection
-        if new_connection:
-            main_window.active_clients_table.setModel(
-                gui_create_model(database))
-            main_window.active_clients_table.resizeColumnsToContents()
-            main_window.active_clients_table.resizeRowsToContents()
-            with conflag_lock:
-                new_connection = False
+        # global new_connection
+        # if new_connection:
+        #     main_window.active_clients_table.setModel(
+        #         gui_create_model(database))
+        #     main_window.active_clients_table.resizeColumnsToContents()
+        #     main_window.active_clients_table.resizeRowsToContents()
+        #     with conflag_lock:
+        #         new_connection = False
+        main_window.active_clients_table.setModel(gui_create_model(database))
+        main_window.active_clients_table.resizeColumnsToContents()
+        main_window.active_clients_table.resizeRowsToContents()
+
 
     # Функция создающяя окно со статистикой клиентов
     def show_statistics():
