@@ -59,19 +59,16 @@ class ChatServer(threading.Thread, metaclass=ServerMaker):
         self.socket.listen(MAX_CONNECTIONS)
 
     def process_client_message(self, message, client):
-        # print(message)
         global new_connection
-        if USER in message:
-            SERVER_LOG.debug(f'Разбор сообщения от клиента : {message[USER][ACCOUNT_NAME]}')
-        if SENDER in message:
-            SERVER_LOG.debug(f'Разбор сообщения от клиента : {message[SENDER]}')
+        SERVER_LOG.debug(f'Разбор сообщения от клиента : {message}')
+
         # Если это сообщение о присутствии, принимаем и отвечаем
         if ACTION in message and message[ACTION] == PRESENCE and TIME in message and USER in message:
             # Если такой пользователь ещё не зарегистрирован, регистрируем, иначе отправляем ответ и завершаем соединение.
             if message[USER][ACCOUNT_NAME] not in self.names.keys():
                 self.names[message[USER][ACCOUNT_NAME]] = client
-                ip, client_port = client.getpeername()
-                self.db.login(message[USER][ACCOUNT_NAME], ip)
+                client_ip, client_port = client.getpeername()
+                self.db.login(message[USER][ACCOUNT_NAME], client_ip, client_port)
                 send_message(client, RESPONSE_200)
                 with conflag_lock:
                     new_connection = True
@@ -82,6 +79,29 @@ class ChatServer(threading.Thread, metaclass=ServerMaker):
                 self.clients.remove(client)
                 client.close()
             return
+        # print(message)
+        # global new_connection
+        # if USER in message:
+        #     SERVER_LOG.debug(f'Разбор сообщения от клиента : {message[USER][ACCOUNT_NAME]}')
+        # if SENDER in message:
+        #     SERVER_LOG.debug(f'Разбор сообщения от клиента : {message[SENDER]}')
+        # # Если это сообщение о присутствии, принимаем и отвечаем
+        # if ACTION in message and message[ACTION] == PRESENCE and TIME in message and USER in message:
+        #     # Если такой пользователь ещё не зарегистрирован, регистрируем, иначе отправляем ответ и завершаем соединение.
+        #     if message[USER][ACCOUNT_NAME] not in self.names.keys():
+        #         self.names[message[USER][ACCOUNT_NAME]] = client
+        #         ip, client_port = client.getpeername()
+        #         self.db.login(message[USER][ACCOUNT_NAME], ip)
+        #         send_message(client, RESPONSE_200)
+        #         with conflag_lock:
+        #             new_connection = True
+        #     else:
+        #         response = RESPONSE_400
+        #         response[ERROR] = 'Имя пользователя уже занято.'
+        #         send_message(client, response)
+        #         self.clients.remove(client)
+        #         client.close()
+        #     return
         # Если это сообщение, то добавляем его в очередь сообщений. Ответ не требуется.
         elif ACTION in message and message[ACTION] == MESSAGE and DESTINATION in message and TIME in message \
                 and SENDER in message and MESSAGE_TEXT in message and self.names[message[SENDER]] == client:
@@ -167,7 +187,8 @@ class ChatServer(threading.Thread, metaclass=ServerMaker):
             if recv_data_lst:
                 for client_with_message in recv_data_lst:
                     try:
-                        self.process_client_message(get_message(client_with_message), client_with_message)
+                        mes = get_message(client_with_message)
+                        self.process_client_message(mes, client_with_message)
                     except:
                         SERVER_LOG.info(f'Клиент {client_with_message.getpeername()} отключился от сервера.')
                         self.clients.remove(client_with_message)

@@ -99,13 +99,12 @@ class ClientConnector(threading.Thread, QObject):
 
     def read_server_response(self, message):
         if RESPONSE in message:
-            if message[RESPONSE] == 200 and MESSAGE in message:
-                return {200: message[MESSAGE]}
             if message[RESPONSE] == 200:
-                return {RESPONSE: 200}
-            elif message[RESPONSE] == 409:
-                return {409: 'User already connected'}
-            return {RESPONSE: 400, ERROR: 'Bad Request'}
+                return
+            elif message[RESPONSE] == 400:
+                raise ServerError(f'{message[ERROR]}')
+            else:
+                CLIENT_LOG.debug(f'Принят неизвестный код подтверждения {message[RESPONSE]}')
         # raise ReqFieldMissingError
         elif ACTION in message and message[ACTION] == MESSAGE and SENDER in message and DESTINATION in message \
                 and MESSAGE_TEXT in message and message[DESTINATION] == self.username:
