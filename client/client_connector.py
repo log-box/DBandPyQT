@@ -77,10 +77,12 @@ class ClientConnector(threading.Thread, QObject):
         # Посылаем серверу приветственное сообщение и получаем ответ что всё нормально или ловим исключение.
         try:
             with socket_lock:
+                print(self.transport)
                 send_message(self.transport, self.create_presence())
                 self.read_server_response(get_message(self.transport))
-        except (OSError, json.JSONDecodeError):
-            CLIENT_LOG.critical('Потеряно соединение с сервером при инициализации!')
+        # except (OSError, json.JSONDecodeError):
+        except Exception as err:
+            CLIENT_LOG.critical(f'Потеряно соединение с сервером при инициализации! {err}')
             raise ServerError('Потеряно соединение с сервером при инициализации!')
 
         # Раз всё хорошо, сообщение о установке соединения.

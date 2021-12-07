@@ -68,7 +68,8 @@ class ChatServer(threading.Thread, metaclass=ServerMaker):
             if message[USER][ACCOUNT_NAME] not in self.names.keys():
                 self.names[message[USER][ACCOUNT_NAME]] = client
                 client_ip, client_port = client.getpeername()
-                self.db.login(message[USER][ACCOUNT_NAME], client_ip, client_port)
+                print(message)
+                self.db.login(message[USER][ACCOUNT_NAME], client_ip)
                 send_message(client, RESPONSE_200)
                 with conflag_lock:
                     new_connection = True
@@ -189,8 +190,8 @@ class ChatServer(threading.Thread, metaclass=ServerMaker):
                     try:
                         mes = get_message(client_with_message)
                         self.process_client_message(mes, client_with_message)
-                    except:
-                        SERVER_LOG.info(f'Клиент {client_with_message.getpeername()} отключился от сервера.')
+                    except Exception as err:
+                        SERVER_LOG.info(f'Клиент {client_with_message.getpeername()} отключился от сервера.: err = {err}')
                         self.clients.remove(client_with_message)
             # Если есть сообщения, обрабатываем каждое.
             for i in self.messages_list:
@@ -293,17 +294,17 @@ def main():
     # Функция обновляющяя список подключённых, проверяет флаг подключения, и
     # если надо обновляет список
     def list_update():
-        # global new_connection
-        # if new_connection:
-        #     main_window.active_clients_table.setModel(
-        #         gui_create_model(database))
-        #     main_window.active_clients_table.resizeColumnsToContents()
-        #     main_window.active_clients_table.resizeRowsToContents()
-        #     with conflag_lock:
-        #         new_connection = False
-        main_window.active_clients_table.setModel(gui_create_model(database))
-        main_window.active_clients_table.resizeColumnsToContents()
-        main_window.active_clients_table.resizeRowsToContents()
+        global new_connection
+        if new_connection:
+            main_window.active_clients_table.setModel(
+                gui_create_model(database))
+            main_window.active_clients_table.resizeColumnsToContents()
+            main_window.active_clients_table.resizeRowsToContents()
+            with conflag_lock:
+                new_connection = False
+        # main_window.active_clients_table.setModel(gui_create_model(database))
+        # main_window.active_clients_table.resizeColumnsToContents()
+        # main_window.active_clients_table.resizeRowsToContents()
 
 
     # Функция создающяя окно со статистикой клиентов
