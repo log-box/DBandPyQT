@@ -6,7 +6,7 @@ from common.variables import *
 from errors import ServerError
 from log.client_log_config import CLIENT_LOG
 from log.log import Log
-from client.DataBaseUsers import DataBaseClients
+from client.dataBaseUsers import DataBaseClients
 from client.client_connector import ClientConnector
 from client.main_window import ClientMainWindow
 from client.start_dialog import UserNameDialog

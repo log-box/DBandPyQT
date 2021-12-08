@@ -7,8 +7,8 @@ from socket import AF_INET, SOCK_STREAM
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QApplication, QMessageBox
 
-from DataBaseServer import DataBaseServer
-from GuiServer import MainWindow, gui_create_model, HistoryWindow, create_stat_model, ConfigWindow
+from dataBaseServer import DataBaseServer
+from guiServer import MainWindow, gui_create_model, HistoryWindow, create_stat_model, ConfigWindow
 from common.utils import *
 from common.variables import *
 from descriptors import Port

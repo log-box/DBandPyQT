@@ -11,7 +11,7 @@ sys.path.append('../')
 from client.main_window_data import Ui_MainClientWindow
 from client.add_contact import AddContactDialog
 from client.del_contact import DelContactDialog
-from client.DataBaseUsers import DataBaseClients
+from client.dataBaseUsers import DataBaseClients
 from client.client_connector import ClientConnector
 from client.start_dialog import UserNameDialog
 from errors import ServerError
