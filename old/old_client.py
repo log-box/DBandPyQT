@@ -10,9 +10,9 @@ from DataBaseUsers import DataBaseClients
 from common.do_dict_utils import do_presence, do_exit_message
 from common.utils import get_message, send_message
 from common.variables import *
-from errors import IncorrectDataRecivedError, ReqFieldMissingError, ServerError
+from common.errors import IncorrectDataRecivedError, ReqFieldMissingError, ServerError
 from log.client_log_config import *
-from metaclass import ClientMaker
+from common.metaclass import ClientMaker
 
 # Объект блокировки сокета и работы с базой данных
 sock_lock = threading.Lock()

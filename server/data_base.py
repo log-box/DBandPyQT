@@ -1,6 +1,6 @@
 import datetime
 
-from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, DateTime, ForeignKey, Text
 from sqlalchemy.orm import mapper, sessionmaker
 
 from common.variables import SERVER_DATABASE
@@ -55,7 +55,9 @@ class DataBaseServer:
         chat_users_table = Table('ChatUsers', self.meta,
                                  Column('id', Integer, primary_key=True),
                                  Column('user_name', String(50), unique=True),
-                                 Column('login_time', DateTime)
+                                 Column('login_time', DateTime),
+                                 Column('passwd_hash', String),
+                                 Column('pubkey', Text)
                                  )
         chat_history_table = Table('ChatUsersHistory', self.meta,
                                    Column('id', Integer, primary_key=True),
@@ -145,6 +147,37 @@ class DataBaseServer:
         )
         return query.all()
 
+    def add_user(self, user_name, passwd_hash):
+        """
+        Метод регистрации пользователя.
+        Принимает имя и хэш пароля, создаёт запись в таблице статистики.
+        """
+        user_row = self.ChatUsers(user_name, passwd_hash)
+        self.cursor.add(user_row)
+        self.cursor.commit()
+        history_row = self.UsersHistory(user_row.id)
+        self.cursor.add(history_row)
+        self.cursor.commit()
+
+    def remove_user(self, name):
+        """Метод удаляющий пользователя из базы."""
+        user = self.cursor.query(self.ChatUsers).filter_by(user_name=name).first()
+        self.cursor.query(self.ChatContacts).filter_by(user_name=user.id).delete()
+        self.cursor.query(self.UsersHistory).filter_by(user=user.id).delete()
+        self.cursor.query(self.Contacts).filter_by(user=user.id).delete()
+        self.cursor.query(
+            self.Contacts).filter_by(
+            contact=user.id).delete()
+        self.cursor.query(self.UsersHistory).filter_by(user=user.id).delete()
+        self.cursor.query(self.ChatUsers).filter_by(user_name=name).delete()
+        self.cursor.commit()
+
+    def check_user(self, name):
+        if self.cursor.query(self.ChatUsers).filter_by(user_name=name).count():
+            return True
+        else:
+            return False
+
     def message_count(self, sender, recipient):
         sender = self.cursor.query(self.ChatUsers).filter_by(user_name=sender).first().id
         recipient = self.cursor.query(self.ChatUsers).filter_by(user_name=recipient).first().id
@@ -200,6 +233,16 @@ class DataBaseServer:
             filter_by(user=user.id). \
             join(self.ChatUsers, self.Contacts.contact == self.ChatUsers.id)
         return [contact[1] for contact in query.all()]
+
+    def get_hash(self, name):
+        """Метод получения хэша пароля пользователя."""
+        user = self.cursor.query(self.ChatUsers).filter_by(user_name=name).first()
+        return user.passwd_hash
+
+    def get_pubkey(self, name):
+        """Метод получения публичного ключа пользователя."""
+        user = self.cursor.query(self.ChatUsers).filter_by(user_name=name).first()
+        return user.pubkey
 
 
 if __name__ == '__main__':

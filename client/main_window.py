@@ -1,9 +1,7 @@
-from PyQt5.QtWidgets import QMainWindow, qApp, QMessageBox, QApplication, QListView
+from PyQt5.QtWidgets import QMainWindow, qApp, QMessageBox
 from PyQt5.QtGui import QStandardItemModel, QStandardItem, QBrush, QColor
-from PyQt5.QtCore import pyqtSlot, QEvent, Qt
+from PyQt5.QtCore import pyqtSlot, Qt
 import sys
-import json
-import logging
 
 from log.client_log_config import CLIENT_LOG
 
@@ -11,10 +9,7 @@ sys.path.append('../')
 from client.main_window_data import Ui_MainClientWindow
 from client.add_contact import AddContactDialog
 from client.del_contact import DelContactDialog
-from client.dataBaseUsers import DataBaseClients
-from client.client_connector import ClientConnector
-from client.start_dialog import UserNameDialog
-from errors import ServerError
+from common.errors import ServerError
 
 
 

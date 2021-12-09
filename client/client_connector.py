@@ -2,7 +2,6 @@ import socket
 import sys
 import time
 from socket import AF_INET, SOCK_STREAM
-import json
 import threading
 
 from PyQt5.QtCore import pyqtSignal, QObject
@@ -13,17 +12,18 @@ sys.path.append('../')
 
 from common.utils import *
 from common.variables import *
-from errors import *
-
+from common.errors import *
 
 socket_lock = threading.Lock()
 database_lock = threading.Lock()
+
+
 class ClientConnector(threading.Thread, QObject):
     # Сигналы новое сообщение и потеря соединения
     new_message = pyqtSignal(str)
     connection_lost = pyqtSignal()
 
-    def __init__(self, port, ip_address, database, username):
+    def __init__(self, port, ip_address, database, username, passwd, keys):
         # Вызываем конструктор предка
         threading.Thread.__init__(self)
         QObject.__init__(self)
@@ -114,7 +114,7 @@ class ClientConnector(threading.Thread, QObject):
             CLIENT_LOG.debug(f'Получено сообщение от пользователя {message[SENDER]}:{message[MESSAGE_TEXT]}')
             with database_lock:
                 try:
-                    self.database.save_message(message[SENDER] , 'in' , message[MESSAGE_TEXT])
+                    self.database.save_message(message[SENDER], 'in', message[MESSAGE_TEXT])
                     self.new_message.emit(message[SENDER])
                 except:
                     CLIENT_LOG.error('Ошибка взаимодействия с базой данных')
@@ -164,7 +164,6 @@ class ClientConnector(threading.Thread, QObject):
             send_message(self.transport, req)
             mes = get_message(self.transport)
             self.read_server_response(mes)
-
 
     def remove_contact(self, contact):
         CLIENT_LOG.debug(f'Удаление контакта {contact}')

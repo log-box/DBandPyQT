@@ -6,8 +6,7 @@ import json
 import hmac
 import binascii
 import os
-from metaclass import ServerMaker
-from descriptors import Port
+from common.descriptors import Port
 from common.variables import *
 from common.utils import send_message, get_message
 from common.decos import login_required

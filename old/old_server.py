@@ -11,10 +11,10 @@ from dataBaseServer import DataBaseServer
 from guiServer import MainWindow, gui_create_model, HistoryWindow, create_stat_model, ConfigWindow
 from common.utils import *
 from common.variables import *
-from descriptors import Port
+from common.descriptors import Port
 from log.server_log_config import *
 from log.server_log_config import SERVER_LOG
-from metaclass import ServerMaker
+from common.metaclass import ServerMaker
 
 # Флаг что был подключён новый пользователь, нужен чтобы не мучать BD
 # постоянными запросами на обновление
@@ -318,7 +318,7 @@ def main():
             if 1023 < port < 65536:
                 config['SETTINGS']['Default_port'] = str(port)
                 print(port)
-                with open('server.ini', 'w') as conf:
+                with open('../server.ini', 'w') as conf:
                     config.write(conf)
                     message.information(
                         config_window, 'OK', 'Настройки успешно сохранены!')

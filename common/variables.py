@@ -63,4 +63,4 @@ RESPONSE_202 = {RESPONSE: 202,
                 LIST_INFO:None
                 }
 
-SERVER_DATABASE = 'sqlite:///server.sqlite.db'
+SERVER_DATABASE = 'sqlite:///server_new.sqlite.db'

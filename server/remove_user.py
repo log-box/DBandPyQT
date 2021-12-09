@@ -40,12 +40,12 @@ class DelUserDialog(QDialog):
         self.all_users_fill()
 
     def all_users_fill(self):
-        '''Метод заполняющий список пользователей.'''
+        """Метод заполняющий список пользователей."""
         self.selector.addItems([item[0]
-                                for item in self.database.users_list()])
+                                for item in self.database.users()])
 
     def remove_user(self):
-        '''Метод - обработчик удаления пользователя.'''
+        """Метод - обработчик удаления пользователя."""
         self.database.remove_user(self.selector.currentText())
         if self.selector.currentText() in self.server.names:
             sock = self.server.names[self.selector.currentText()]

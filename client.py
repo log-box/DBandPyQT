@@ -1,11 +1,13 @@
 import argparse
+import os
 import sys
-from PyQt5.QtWidgets import QApplication
+
+import RSA as RSA
+from PyQt5.QtWidgets import QApplication, QMessageBox
 
 from common.variables import *
-from errors import ServerError
+from common.errors import ServerError
 from log.client_log_config import CLIENT_LOG
-from log.log import Log
 from client.dataBaseUsers import DataBaseClients
 from client.client_connector import ClientConnector
 from client.main_window import ClientMainWindow
@@ -51,28 +53,43 @@ if __name__ == '__main__':
         # Если пользователь ввёл имя и нажал ОК, то сохраняем ведённое и удаляем объект, инааче выходим
         if start_dialog.ok_pressed:
             client_name = start_dialog.client_name.text()
-            del start_dialog
+            client_passwd = start_dialog.client_passwd.text()
+            CLIENT_LOG.debug(f'Using USERNAME = {client_name}, PASSWD = {client_passwd}.')
         else:
             exit(0)
 
     # Записываем логи
     CLIENT_LOG.info(
         f'Запущен клиент с парамертами: адрес сервера: {server_address} , порт: {server_port}, имя пользователя: {client_name}')
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    key_file = os.path.join(dir_path, f'{client_name}.key')
+    if not os.path.exists(key_file):
+        keys = RSA.generate(2048, os.urandom)
+        with open(key_file, 'wb') as key:
+            key.write(keys.export_key())
+    else:
+        with open(key_file, 'rb') as key:
+            keys = RSA.import_key(key.read())
 
+    #!!!keys.publickey().export_key()
+    CLIENT_LOG.debug("Keys sucsessfully loaded.")
     # Создаём объект базы данных
     database = DataBaseClients(client_name)
 
     # Создаём объект - транспорт и запускаем транспортный поток
     try:
-        transport = ClientConnector(server_port, server_address, database, client_name)
+        transport = ClientConnector(server_port, server_address, database, client_name, client_passwd, keys)
+        CLIENT_LOG.debug('Client Connector is active')
     except ServerError as error:
-        print(error.text)
+        message = QMessageBox()
+        message.critical(start_dialog, 'Ошибка сервера', error.text)
         exit(1)
     transport.setDaemon(True)
     transport.start()
 
+    del start_dialog
     # Создаём GUI
-    main_window = ClientMainWindow(database, transport)
+    main_window = ClientMainWindow(database, transport, keys)
     main_window.make_connection(transport)
     main_window.setWindowTitle(f'Чат Программа alpha release - {client_name}')
     client_app.exec_()
