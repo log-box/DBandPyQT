@@ -1,3 +1,6 @@
+import binascii
+import hashlib
+import hmac
 import socket
 import sys
 import time
@@ -16,6 +19,7 @@ from common.errors import *
 
 socket_lock = threading.Lock()
 database_lock = threading.Lock()
+message_205 = pyqtSignal()
 
 
 class ClientConnector(threading.Thread, QObject):
@@ -31,18 +35,20 @@ class ClientConnector(threading.Thread, QObject):
         self.database = database
         self.username = username
         self.transport = None
+        self.keys = keys
+        self.passwd = passwd
         self.connection_init(port, ip_address)
         try:
             self.user_list_request()
             self.contacts_list_request()
         except OSError as err:
             if err.errno:
-                CLIENT_LOG.critical(f'Потеряно соединение с сервером.')
-                raise ServerError('Потеряно соединение с сервером!')
+                CLIENT_LOG.critical(f'Потеряно соединение с сервером при обновлении пользователей.')
+                raise ServerError('Потеряно соединение с сервером при обновлении пользователей')
             CLIENT_LOG.error('Timeout соединения при обновлении списков пользователей.')
         except json.JSONDecodeError:
-            CLIENT_LOG.critical(f'Потеряно соединение с сервером.')
-            raise ServerError('Потеряно соединение с сервером!')
+            CLIENT_LOG.critical(f'Потеряно соединение с сервером обновлении пользователей.')
+            raise ServerError('Потеряно соединение с сервером обновлении пользователей!')
             # Флаг продолжения работы транспорта.
         self.running = True
 
@@ -72,6 +78,51 @@ class ClientConnector(threading.Thread, QObject):
             CLIENT_LOG.critical('Не удалось установить соединение с сервером')
             raise ServerError('Не удалось установить соединение с сервером')
 
+        CLIENT_LOG.debug('Начата процедура аутентификации')
+        passwd_bytes = self.passwd.encode('utf-8')
+        salt = self.username.lower().encode('utf-8')
+        passwd_hash = hashlib.pbkdf2_hmac('sha512', passwd_bytes, salt, 10000)
+        passwd_hash_string = binascii.hexlify(passwd_hash)
+
+        CLIENT_LOG.debug(f'Passwd hash ready: {passwd_hash_string}')
+        # Получаем публичный ключ и декодируем его из байтов
+        pubkey = self.keys.publickey().export_key().decode('ascii')
+
+        # Авторизируемся на сервере
+        with socket_lock:
+            presense = {
+                ACTION: PRESENCE,
+                TIME: time.time(),
+                USER: {
+                    ACCOUNT_NAME: self.username,
+                    PUBLIC_KEY: pubkey
+                }
+            }
+            CLIENT_LOG.debug(f"Presense message = {presense}")
+            # Отправляем серверу приветственное сообщение.
+            try:
+                send_message(self.transport, presense)
+                ans = get_message(self.transport)
+                CLIENT_LOG.debug(f'Server response = {ans}.')
+                # Если сервер вернул ошибку, бросаем исключение.
+                if RESPONSE in ans:
+                    if ans[RESPONSE] == 400:
+                        raise ServerError(ans[ERROR])
+                    elif ans[RESPONSE] == 511:
+                        # Если всё нормально, то продолжаем процедуру
+                        # авторизации.
+                        ans_data = ans[DATA]
+                        hash = hmac.new(passwd_hash_string, ans_data.encode('utf-8'), 'MD5')
+                        digest = hash.digest()
+                        my_ans = RESPONSE_511
+                        my_ans[DATA] = binascii.b2a_base64(
+                            digest).decode('ascii')
+                        send_message(self.transport, my_ans)
+                        self.read_server_response(get_message(self.transport))
+            except (OSError, json.JSONDecodeError) as err:
+                CLIENT_LOG.debug(f'Connection error.', exc_info=err)
+                raise ServerError('Сбой соединения в процессе авторизации.')
+
         CLIENT_LOG.debug('Установлено соединение с сервером')
 
         # Посылаем серверу приветственное сообщение и получаем ответ что всё нормально или ловим исключение.
@@ -83,8 +134,8 @@ class ClientConnector(threading.Thread, QObject):
                 self.read_server_response(mess)
         # except (OSError, json.JSONDecodeError):
         except Exception as err:
-            CLIENT_LOG.critical(f'Потеряно соединение с сервером при инициализации! {err}')
-            raise ServerError('Потеряно соединение с сервером при инициализации!')
+            CLIENT_LOG.critical(f'Потеряно соединение с сервером при приветственном сообщении! {err}')
+            raise ServerError('Потеряно соединение с сервером при приветственном сообщении!')
 
         # Раз всё хорошо, сообщение о установке соединения.
         CLIENT_LOG.info('Соединение с сервером успешно установлено.')
@@ -101,11 +152,16 @@ class ClientConnector(threading.Thread, QObject):
         return out
 
     def read_server_response(self, message):
+        CLIENT_LOG.debug(f'Получено следующее сообщение от сервера: {message}')
         if RESPONSE in message:
             if message[RESPONSE] == 200:
                 return
             elif message[RESPONSE] == 400:
                 raise ServerError(f'{message[ERROR]}')
+            elif message[RESPONSE] == 205:
+                self.user_list_request()
+                self.contacts_list_request()
+                self.message_205.emit()
             else:
                 CLIENT_LOG.debug(f'Принят неизвестный код подтверждения {message[RESPONSE]}')
         # raise ReqFieldMissingError
@@ -151,6 +207,22 @@ class ClientConnector(threading.Thread, QObject):
             self.database.add_users(ans[LIST_INFO])
         else:
             CLIENT_LOG.error('Не удалось обновить список известных пользователей.')
+
+    def key_request(self, user):
+        """Метод запрашивающий с сервера публичный ключ пользователя."""
+        CLIENT_LOG.debug(f'Запрос публичного ключа для {user}')
+        req = {
+            ACTION: PUBLIC_KEY_REQUEST,
+            TIME: time.time(),
+            ACCOUNT_NAME: user
+        }
+        with socket_lock:
+            send_message(self.transport, req)
+            ans = get_message(self.transport)
+        if RESPONSE in ans and ans[RESPONSE] == 511:
+            return ans[DATA]
+        else:
+            CLIENT_LOG.error(f'Не удалось получить ключ собеседника{user}.')
 
     def add_contact(self, contact):
         CLIENT_LOG.debug(f'Создание контакта {contact}')
@@ -215,6 +287,7 @@ class ClientConnector(threading.Thread, QObject):
             # Отдыхаем секунду и снова пробуем захватить сокет.
             # если не сделать тут задержку, то отправка может достаточно долго ждать освобождения сокета.
             time.sleep(1)
+            message = None
             with socket_lock:
                 try:
                     self.transport.settimeout(0.5)
@@ -235,3 +308,6 @@ class ClientConnector(threading.Thread, QObject):
                     self.read_server_response(message)
                 finally:
                     self.transport.settimeout(5)
+            if message:
+                CLIENT_LOG.debug(f'Принято сообщение с сервера: {message}')
+                self.process_server_ans(message)

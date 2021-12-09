@@ -1,8 +1,7 @@
 import argparse
 import os
 import sys
-
-import RSA as RSA
+from Crypto.PublicKey import RSA
 from PyQt5.QtWidgets import QApplication, QMessageBox
 
 from common.variables import *

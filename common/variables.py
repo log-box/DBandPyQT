@@ -30,9 +30,8 @@ EXIT = 'exit'
 SENDER = 'sender'
 DESTINATION = 'destination'
 MESSAGE_TEXT = 'mess_text'
-
+PUBLIC_KEY = 'pubkey'
 ##############################
-
 # Прочие ключи, используемые в протоколе
 RESPONSE = 'response'
 ERROR = 'error'
@@ -52,15 +51,26 @@ LIST_INFO = 'data_list'
 GET_CONTACTS = 'get_contacts'
 REMOVE_CONTACT = 'remove'
 ADD_CONTACT = 'add'
+PUBLIC_KEY_REQUEST = 'pubkey_need'
+DATA = 'bin'
 ##############
 
 RESPONSE_200 = {RESPONSE: 200}
 RESPONSE_400 = {
-            RESPONSE: 400,
-            ERROR: None
-        }
+    RESPONSE: 400,
+    ERROR: None
+}
 RESPONSE_202 = {RESPONSE: 202,
-                LIST_INFO:None
+                LIST_INFO: None
                 }
+
+RESPONSE_205 = {
+    RESPONSE: 205
+}
+
+RESPONSE_511 = {
+    RESPONSE: 511,
+    DATA: None
+}
 
 SERVER_DATABASE = 'sqlite:///server_new.sqlite.db'
