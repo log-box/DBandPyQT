@@ -186,7 +186,7 @@ class ClientMainWindow(QMainWindow):
                 self.close()
             self.messages.critical(self, 'Ошибка', 'Таймаут соединения!')
         else:
-            self.database.del_contact(selected)
+            self.database.remove_contact(selected)
             self.clients_list_update()
             CLIENT_LOG.info(f'Успешно удалён контакт {selected}')
             self.messages.information(self, 'Успех', 'Контакт успешно удалён.')

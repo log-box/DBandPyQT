@@ -186,10 +186,10 @@ class DataBaseServer:
         contact = self.cursor.query(self.ChatUsers).filter_by(user_name=contact).first()
         if not contact:
             return
-        print(self.cursor.query(self.ChatContacts).filter(
+        self.cursor.query(self.Contacts).filter(
             self.Contacts.user == user.id,
             self.Contacts.contact == contact.id
-        ).delete())
+        ).delete()
         self.cursor.commit()
 
     def get_contacts(self, username):

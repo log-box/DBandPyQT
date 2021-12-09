@@ -49,7 +49,7 @@ class DataBaseServer:
 
     def __init__(self, path):
         self.database_core = create_engine(f'sqlite:///{path}', echo=False, pool_recycle=7200,
-                                             connect_args={'check_same_thread': False})
+                                           connect_args={'check_same_thread': False})
         self.meta = MetaData()
 
         chat_users_table = Table('ChatUsers', self.meta,
@@ -158,7 +158,7 @@ class DataBaseServer:
             )
             self.cursor.add(new_sender)
             self.cursor.commit()
-            sender_row = self.cursor.query(self.UsersHistory) .filter_by(user=sender).first()
+            sender_row = self.cursor.query(self.UsersHistory).filter_by(user=sender).first()
             sender_row.sent = 1
         recipient_row = self.cursor.query(self.UsersHistory).filter_by(user=recipient).first()
         if recipient_row is not None:

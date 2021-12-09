@@ -62,7 +62,7 @@ class AddContactDialog(QDialog):
     # затем содержимое предполагаемых контактов
     def update_possible_contacts(self):
         try:
-            self.transport.user_list_update()
+            self.transport.user_list_request()
         except OSError:
             pass
         else:

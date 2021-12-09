@@ -79,7 +79,8 @@ class ClientConnector(threading.Thread, QObject):
             with socket_lock:
                 print(self.transport)
                 send_message(self.transport, self.create_presence())
-                self.read_server_response(get_message(self.transport))
+                mess = get_message(self.transport)
+                self.read_server_response(mess)
         # except (OSError, json.JSONDecodeError):
         except Exception as err:
             CLIENT_LOG.critical(f'Потеряно соединение с сервером при инициализации! {err}')

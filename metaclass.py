@@ -27,6 +27,7 @@ class ClientMaker(type):
         super().__init__(classname, bases, classdict)
         print('======Meta is god======')
 
+
 class ServerMaker(type):
     def __init__(self, classname, bases, classdict):
         methods = []
