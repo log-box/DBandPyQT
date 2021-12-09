@@ -93,20 +93,37 @@ class DataBaseServer:
         self.cursor.query(self.ChatContacts).delete()
         self.cursor.commit()
 
-    def login(self, user_name, ip_addr):
+    def login(self, user_name, ip_addr, key):
         request = self.cursor.query(self.ChatUsers).filter_by(user_name=user_name)
         if request.count():
             current_user = request.first()
             current_user.login_time = datetime.datetime.now()
+            if current_user.pubkey != key:
+                current_user.pubkey = key
         else:
-            current_user = self.ChatUsers(user_name)
-            self.cursor.add(current_user)
-            self.cursor.commit()
-        new_chat_contact = self.ChatContacts(current_user.id, ip_addr, datetime.datetime.now())
-        user_history = self.ChatUsersHistory(current_user.id, ip_addr, datetime.datetime.now())
-        self.cursor.add(new_chat_contact)
-        self.cursor.add(user_history)
+            raise ValueError('Пользователь не зарегистрирован.')
+
+        # Теперь можно создать запись в таблицу активных пользователей о факте
+        # входа.
+        new_active_user = self.ChatContacts(
+            current_user.id, ip_addr, datetime.datetime.now())
+        self.cursor.add(new_active_user)
+
+        # и сохранить в историю входов
+        history = self.ChatUsersHistory(current_user.id, ip_addr, datetime.datetime.now())
+        self.cursor.add(history)
+
+        # Сохрраняем изменения
         self.cursor.commit()
+        # else:
+        #     current_user = self.ChatUsers(user_name)
+        #     self.cursor.add(current_user)
+        #     self.cursor.commit()
+        # new_chat_contact = self.ChatContacts(current_user.id, ip_addr, datetime.datetime.now())
+        # user_history = self.ChatUsersHistory(current_user.id, ip_addr, datetime.datetime.now())
+        # self.cursor.add(new_chat_contact)
+        # self.cursor.add(user_history)
+        # self.cursor.commit()
 
     def logout(self, user_name):
         user = self.cursor.query(self.ChatUsers).filter_by(user_name=user_name).first()

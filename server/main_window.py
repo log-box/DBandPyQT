@@ -92,12 +92,12 @@ class MainWindow(QMainWindow):
         list.setHorizontalHeaderLabels(
             ['Имя Клиента', 'IP Адрес', 'Порт', 'Время подключения'])
         for row in list_users:
-            user, ip, port, time = row
+            user, ip, time = row
             user = QStandardItem(user)
             user.setEditable(False)
             ip = QStandardItem(ip)
             ip.setEditable(False)
-            port = QStandardItem(str(port))
+            port = QStandardItem(str('port'))
             port.setEditable(False)
             # Уберём милисекунды из строки времени, т.к. такая точность не
             # требуется.

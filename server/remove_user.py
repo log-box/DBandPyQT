@@ -4,9 +4,9 @@ from PyQt5.QtGui import QStandardItemModel, QStandardItem
 
 
 class DelUserDialog(QDialog):
-    '''
+    """
     Класс - диалог выбора контакта для удаления.
-    '''
+    """
 
     def __init__(self, database, server):
         super().__init__()
