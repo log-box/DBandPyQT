@@ -234,14 +234,23 @@ class DataBaseServer:
         self.cursor.commit()
 
     def remove_contact(self, user, contact):
+        """Метод удаления контакта пользователя."""
+        # Получаем ID пользователей
         user = self.cursor.query(self.ChatUsers).filter_by(user_name=user).first()
-        contact = self.cursor.query(self.ChatUsers).filter_by(user_name=contact).first()
+        contact = self.cursor.query(
+            self.ChatUsers).filter_by(
+            user_name=contact).first()
+
+        # Проверяем что контакт может существовать (полю пользователь мы
+        # доверяем)
         if not contact:
             return
-        print(self.cursor.query(self.ChatContacts).filter(
+
+        # Удаляем требуемое
+        self.cursor.query(self.Contacts).filter(
             self.Contacts.user == user.id,
             self.Contacts.contact == contact.id
-        ).delete())
+        ).delete()
         self.cursor.commit()
 
     def get_contacts(self, username):

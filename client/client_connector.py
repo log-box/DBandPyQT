@@ -24,7 +24,8 @@ message_205 = pyqtSignal()
 
 class ClientConnector(threading.Thread, QObject):
     # Сигналы новое сообщение и потеря соединения
-    new_message = pyqtSignal(str)
+    new_message = pyqtSignal(dict)
+    message_205 = pyqtSignal()
     connection_lost = pyqtSignal()
 
     def __init__(self, port, ip_address, database, username, passwd, keys):
@@ -58,7 +59,7 @@ class ClientConnector(threading.Thread, QObject):
         self.transport = socket(AF_INET, SOCK_STREAM)
 
         # Таймаут необходим для освобождения сокета.
-        self.transport.settimeout(1)
+        self.transport.settimeout(5)
 
         # Соединяемся, 5 попыток соединения, флаг успеха ставим в True если удалось
         connected = False
@@ -70,6 +71,7 @@ class ClientConnector(threading.Thread, QObject):
                 pass
             else:
                 connected = True
+                CLIENT_LOG.debug('Connected to server')
                 break
             time.sleep(1)
 
@@ -79,6 +81,7 @@ class ClientConnector(threading.Thread, QObject):
             raise ServerError('Не удалось установить соединение с сервером')
 
         CLIENT_LOG.debug('Начата процедура аутентификации')
+
         passwd_bytes = self.passwd.encode('utf-8')
         salt = self.username.lower().encode('utf-8')
         passwd_hash = hashlib.pbkdf2_hmac('sha512', passwd_bytes, salt, 10000)
@@ -123,33 +126,33 @@ class ClientConnector(threading.Thread, QObject):
                 CLIENT_LOG.debug(f'Connection error.', exc_info=err)
                 raise ServerError('Сбой соединения в процессе авторизации.')
 
-        CLIENT_LOG.debug('Установлено соединение с сервером')
+        # CLIENT_LOG.debug('Установлено соединение с сервером')
 
         # Посылаем серверу приветственное сообщение и получаем ответ что всё нормально или ловим исключение.
-        try:
-            with socket_lock:
-                print(self.transport)
-                send_message(self.transport, self.create_presence())
-                mess = get_message(self.transport)
-                self.read_server_response(mess)
-        # except (OSError, json.JSONDecodeError):
-        except Exception as err:
-            CLIENT_LOG.critical(f'Потеряно соединение с сервером при приветственном сообщении! {err}')
-            raise ServerError('Потеряно соединение с сервером при приветственном сообщении!')
-
-        # Раз всё хорошо, сообщение о установке соединения.
-        CLIENT_LOG.info('Соединение с сервером успешно установлено.')
-
-    def create_presence(self):
-        out = {
-            ACTION: PRESENCE,
-            TIME: time.time(),
-            USER: {
-                ACCOUNT_NAME: self.username
-            }
-        }
-        CLIENT_LOG.debug(f'Сформировано {PRESENCE} сообщение для пользователя {self.username}')
-        return out
+    #     try:
+    #         with socket_lock:
+    #             print(self.transport)
+    #             send_message(self.transport, self.create_presence())
+    #             mess = get_message(self.transport)
+    #             self.read_server_response(mess)
+    #     # except (OSError, json.JSONDecodeError):
+    #     except Exception as err:
+    #         CLIENT_LOG.critical(f'Потеряно соединение с сервером при приветственном сообщении! {err}')
+    #         raise ServerError('Потеряно соединение с сервером при приветственном сообщении!')
+    #
+    #     # Раз всё хорошо, сообщение о установке соединения.
+    #     CLIENT_LOG.info('Соединение с сервером успешно установлено.')
+    #
+    # def create_presence(self):
+    #     out = {
+    #         ACTION: PRESENCE,
+    #         TIME: time.time(),
+    #         USER: {
+    #             ACCOUNT_NAME: self.username
+    #         }
+    #     }
+    #     CLIENT_LOG.debug(f'Сформировано {PRESENCE} сообщение для пользователя {self.username}')
+    #     return out
 
     def read_server_response(self, message):
         CLIENT_LOG.debug(f'Получено следующее сообщение от сервера: {message}')
@@ -247,7 +250,8 @@ class ClientConnector(threading.Thread, QObject):
         }
         with socket_lock:
             send_message(self.transport, req)
-            self.read_server_response(get_message(self.transport))
+            mes = get_message(self.transport)
+            self.read_server_response(mes)
 
     # Функция закрытия соединения, отправляет сообщение о выходе.
     def transport_shutdown(self):
@@ -310,4 +314,4 @@ class ClientConnector(threading.Thread, QObject):
                     self.transport.settimeout(5)
             if message:
                 CLIENT_LOG.debug(f'Принято сообщение с сервера: {message}')
-                self.process_server_ans(message)
+                self.read_server_response(message)
