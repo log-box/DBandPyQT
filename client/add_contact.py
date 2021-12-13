@@ -1,12 +1,10 @@
-import sys
-
-from log.client_log_config import CLIENT_LOG
-
-sys.path.append('../')
 from PyQt5.QtWidgets import QDialog, QLabel, QComboBox, QPushButton
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QStandardItemModel, QStandardItem
+from log.client_log_config import CLIENT_LOG
+import sys
+sys.path.append('../')
 
+from PyQt5.QtGui import QStandardItemModel, QStandardItem
 
 
 # Диалог выбора контакта для добавления
@@ -58,7 +56,7 @@ class AddContactDialog(QDialog):
         # Добавляем список возможных контактов
         self.selector.addItems(users_list - contacts_list)
 
-    # Обновлялка возможных контактов. Обновляет таблицу известных пользователей,
+    # Обновляет список возможных контактов. Обновляет таблицу известных пользователей,
     # затем содержимое предполагаемых контактов
     def update_possible_contacts(self):
         try:

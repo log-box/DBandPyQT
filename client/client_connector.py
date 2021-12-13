@@ -23,6 +23,7 @@ message_205 = pyqtSignal()
 
 
 class ClientConnector(threading.Thread, QObject):
+    """Коннектор клиента к серверу"""
     # Сигналы новое сообщение и потеря соединения
     new_message = pyqtSignal(dict)
     message_205 = pyqtSignal()
@@ -55,6 +56,7 @@ class ClientConnector(threading.Thread, QObject):
 
     # Функция инициализации соединения с сервером
     def connection_init(self, port, ip):
+        """Функция инициализации соединения"""
         # Инициализация сокета и сообщение серверу о нашем появлении
         self.transport = socket(AF_INET, SOCK_STREAM)
 
@@ -129,6 +131,7 @@ class ClientConnector(threading.Thread, QObject):
         # CLIENT_LOG.debug('Установлено соединение с сервером')
 
         # Посылаем серверу приветственное сообщение и получаем ответ что всё нормально или ловим исключение.
+
     #     try:
     #         with socket_lock:
     #             print(self.transport)
@@ -155,6 +158,7 @@ class ClientConnector(threading.Thread, QObject):
     #     return out
 
     def read_server_response(self, message):
+        """Функция обработки сообщений от Сервера, читает коды ответов"""
         CLIENT_LOG.debug(f'Получено следующее сообщение от сервера: {message}')
         if RESPONSE in message:
             if message[RESPONSE] == 200:
@@ -179,6 +183,7 @@ class ClientConnector(threading.Thread, QObject):
                     CLIENT_LOG.error('Ошибка взаимодействия с базой данных')
 
     def contacts_list_request(self):
+        """Функция запроса списка контактов с Сервера"""
         CLIENT_LOG.debug(f'Запрос контакт листа для пользователся {self.name}')
         req = {
             ACTION: GET_CONTACTS,
@@ -197,6 +202,7 @@ class ClientConnector(threading.Thread, QObject):
             CLIENT_LOG.error('Не удалось обновить список контактов.')
 
     def user_list_request(self):
+        """Функция запроса списка пользователей с Сервера"""
         CLIENT_LOG.debug(f'Запрос списка известных пользователей {self.username}')
         req = {
             ACTION: USERS_REQUEST,
@@ -228,6 +234,7 @@ class ClientConnector(threading.Thread, QObject):
             CLIENT_LOG.error(f'Не удалось получить ключ собеседника{user}.')
 
     def add_contact(self, contact):
+        """Функция добавления контакта в список контактов"""
         CLIENT_LOG.debug(f'Создание контакта {contact}')
         req = {
             ACTION: ADD_CONTACT,
@@ -241,6 +248,7 @@ class ClientConnector(threading.Thread, QObject):
             self.read_server_response(mes)
 
     def remove_contact(self, contact):
+        """Функция удаления контакта из списка контактов"""
         CLIENT_LOG.debug(f'Удаление контакта {contact}')
         req = {
             ACTION: REMOVE_CONTACT,
@@ -255,6 +263,7 @@ class ClientConnector(threading.Thread, QObject):
 
     # Функция закрытия соединения, отправляет сообщение о выходе.
     def transport_shutdown(self):
+        """Функция закрытия соединения, отправляет сообщение о выходе"""
         self.running = False
         message = {
             ACTION: EXIT,
@@ -270,6 +279,7 @@ class ClientConnector(threading.Thread, QObject):
         time.sleep(0.5)
 
     def send_message(self, to, message):
+        """Функция отправки сообщения"""
         message_dict = {
             ACTION: MESSAGE,
             SENDER: self.username,

@@ -57,25 +57,30 @@ class DataBaseClients:
         self.cursor.commit()
 
     def add_contact(self, contact):
+        """Функция добавления контакта с список контактов"""
         if not self.cursor.query(self.Contacts).filter_by(name=contact).count():
             new_contact = self.Contacts(contact)
             self.cursor.add(new_contact)
             self.cursor.commit()
 
     def remove_contact(self, contact):
+        """Функция удаления контакта из списка контактов"""
         self.cursor.query(self.Contacts).filter_by(name=contact).delete()
         self.cursor.commit()
 
     def check_contact(self, contact):
+        """Функция проверки наличия контакта в БД сервера"""
         if self.cursor.query(self.Contacts).filter_by(name=contact).count():
             return True
         else:
             return False
 
     def get_contacts(self):
+        """Функция получает все контакты с сервера"""
         return [contact[0] for contact in self.cursor.query(self.Contacts.name).all()]
 
     def add_users(self, users_list):
+        """Функция добавляет всех пользователей с сервера в список пользователя"""
         self.cursor.query(self.AllUsers).delete()
         for user in users_list:
             new_user = self.AllUsers(user)
@@ -83,15 +88,18 @@ class DataBaseClients:
         self.cursor.commit()
 
     def get_users(self):
+        """Функция получает всех пользователей с сервера"""
         return [user[0] for user in self.cursor.query(self.AllUsers.user).all()]
 
     def check_user(self, user):
+        """Функция проверки наличия пользователя на сервере"""
         if self.cursor.query(self.AllUsers).filter_by(user=user).count():
             return True
         else:
             return False
 
     def save_message(self, from_user, to_user, message):
+        """Функция сохранения сообщения на сервер"""
         if self.check_user(from_user) and self.check_user(to_user):
             new_message = self.Messages(from_user, to_user, message)
             self.cursor.add(new_message)
@@ -101,6 +109,7 @@ class DataBaseClients:
             return False
 
     def get_history(self, from_user=None, to_user=None):
+        """Функция получения истории сообщений"""
         query = self.cursor.query(self.Messages)
         if from_user:
             query = query.filter_by(from_user=from_user)

@@ -1,5 +1,4 @@
 import threading
-import logging
 import select
 import socket
 import json
