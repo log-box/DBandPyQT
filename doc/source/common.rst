@@ -18,13 +18,13 @@ Common package
 Скрипт errors.py
 ---------------------
    
-.. autoclass:: common.errors
+.. automodule:: common.errors
    :members:
    
 Скрипт metaclasses.py
 -----------------------
 
-.. autoclass:: common.metaclass
+.. automodule:: common.metaclass
    :members:
 
 Скрипт utils.py
